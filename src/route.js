@@ -1,5 +1,7 @@
 const express = require("express");
 var cors = require("cors");
+
+require("dotenv").config();
 const serverless = require("serverless-http");
 const { createUser, getUser, updateUserSettings, getUserSettings } = require("./controllers/users");
 const { verifyToken } = require("./lib/utils");

@@ -1,8 +1,10 @@
 const AWS = require("aws-sdk");
+
 const bcrypt = require("bcryptjs");
 
 const USERS_TABLE = process.env.USERS_TABLE;
 const USERS_SETTINGS_TABLE = process.env.USERS_SETTINGS_TABLE;
+
 const dynamoDbClient = new AWS.DynamoDB.DocumentClient();
 
 const createUser = async (props) => {
@@ -28,9 +30,10 @@ const createUser = async (props) => {
 
   try {
     await createUserSettings({ userId: props.email });
-    await dynamoDbClient.post(params).promise();
+    await dynamoDbClient.put(params).promise();
     return { name: props.name, email: props.email, createdAt: new Date().toUTCString() };
   } catch (error) {
+    console.log({ error });
     throw new Error("Could not create user");
   }
 };
@@ -58,12 +61,13 @@ createUserSettings = async (props) => {
     },
   };
 
-  console.log({ item: params.Item });
+  console.log({ params });
 
   try {
-    const resp = await dynamoDbClient.post(params).promise();
+    const resp = await dynamoDbClient.put(params).promise();
     console.log({ resp });
   } catch (error) {
+    console.log({ error });
     throw new Error("Could not create settings");
   }
 };
@@ -78,14 +82,15 @@ getUserSettings = async (props) => {
   console.log({ params });
 
   try {
-    const Item = await dynamoDbClient.get(params).promise();
-    console.log({ Item });
-    // if (Item) {
-    //   return Item;
-    // } else {
-    //   throw new Error('Could not find user with provided "userId"');
-    // }
+    const response = await dynamoDbClient.get(params).promise();
+    console.log({ response });
+    if (response) {
+      return response.Item;
+    } else {
+      throw new Error('Could not find user with provided "userId"');
+    }
   } catch (error) {
+    console.log({ error });
     throw new Error("Could not get user");
   }
 };
@@ -101,6 +106,7 @@ updateUserSettings = async (props) => {
     await dynamoDbClient.put(params).promise();
     return props;
   } catch (error) {
+    console.log({ error });
     throw new Error("Could not update settings");
   }
 };
@@ -123,6 +129,7 @@ const getUser = async (props) => {
       throw new Error('Could not find user with provided "userId"');
     }
   } catch (error) {
+    console.log({ error });
     throw new Error("Could not get user");
   }
 };
