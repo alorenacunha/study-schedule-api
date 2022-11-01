@@ -2,7 +2,8 @@ service: study-schedule
 frameworkVersion: "3"
 
 custom:
-  tableName: "users-table-${sls:stage}"
+  usersTableName: "users-table-${sls:stage}"
+  settingsTableName: "settings-table-${sls:stage}"
   dynamodb:
     start:
       migrate: true
@@ -26,13 +27,16 @@ provider:
           Resource:
             - Fn::GetAtt: [UsersTable, Arn]
   environment:
-    USERS_TABLE: ${self:custom.tableName}
+    USERS_TABLE: ${self:custom.usersTableName}
+    USERS_SETTINGS_TABLE: ${self:custom.settingsTableName}
 
 functions:
-  users:
-    handler: views/users.handler
+  api:
+    handler: src/route.handler
     events:
       - httpApi: "*"
+    url:
+      cors: true
 
 resources:
   Resources:
@@ -46,7 +50,18 @@ resources:
           - AttributeName: userId
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:custom.tableName}
+        TableName: ${self:custom.usersTableName}
+    SetttingsUsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.settingsTableName}
 
 plugins:
   - serverless-dynamodb-local
